@@ -18,14 +18,12 @@ on:
 
 jobs:
   windows-native:
-    name: Win ${{ matrix.sys }} / ${{ matrix.node }} / ${{matrix.shell}}
+    name: Win ${{ matrix.sys }} / ${{ matrix.node }}
     strategy:
       fail-fast: false
       matrix:
         sys: [windows-latest, windows-11-arm]
         node: [20, 22, 24]
-        # might be unnecessory to include pwsh and powershell
-        shell: [cmd, pwsh, powershell, bash]
     runs-on: ${{ matrix.sys }}
 
     steps:
@@ -35,17 +33,29 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Echo Node Version
-        shell: ${{ matrix.shell }}
+        shell: cmd
         run: |
           node --version
-      - name: Check OS Type
-        shell: ${{ matrix.shell }}
+      - name: Check OS Type (cmd)
+        shell: cmd
         run: |
-          node index.cjs > os.txt
-      - uses: actions/upload-artifact@v5
+          node index.cjs > os-${{ matrix.sys }}-${{ matrix.node }}-cmd.txt
+      - name: Check OS Type (pwsh)
+        shell: pwsh
+        run: |
+          node index.cjs > os-${{ matrix.sys }}-${{ matrix.node }}-pwsh.txt
+      - name: Check OS Type (powershell)
+        shell: powershell
+        run: |
+          node index.cjs > os-${{ matrix.sys }}-${{ matrix.node }}-powershell.txt
+      - name: Check OS Type (bash)
+        shell: bash
+        run: |
+          node index.cjs > os-${{ matrix.sys }}-${{ matrix.node }}-bash.txt
+      - uses: actions/upload-artifact@v4
         with:
-          name: os-${{ matrix.sys }}-${{ matrix.node }}-${{ matrix.shell }}
-          path: os.txt
+          name: os-${{ matrix.sys }}-${{ matrix.node }}
+          path: os-${{ matrix.sys }}-${{ matrix.node }}-*.txt
 
   msys2:
     name: MSYS2 ${{matrix.sys}}
@@ -70,11 +80,11 @@ jobs:
       - name: Check OS Type
         shell: msys2 {0}
         run: |
-          node index.cjs > os.txt
+          node index.cjs > os-msys2-${{ matrix.sys }}.txt
       - uses: actions/upload-artifact@v5
         with:
-          name: os-${{ matrix.sys }}
-          path: os.txt
+          name: os-msys2-${{ matrix.sys }}
+          path: os-msys2-${{ matrix.sys }}.txt
 
   done:
     runs-on: ubuntu-latest
